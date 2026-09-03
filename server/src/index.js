@@ -25,8 +25,8 @@ const publicDir = path.join(__dirname, '../public');
 initDB();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = parseInt(process.env.PORT, 10) || 3000;
+const HOST = '0.0.0.0';
 
 // Middleware
 app.use(cors());
