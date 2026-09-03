@@ -5,25 +5,9 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 
-let Database;
-try {
-  // Coba better-sqlite3 dulu (tersedia di cloud Linux dengan prebuilt binary)
-  Database = require('better-sqlite3');
-} catch {
-  // Fallback: gunakan node:sqlite (Node 22+)
-  const { DatabaseSync } = await import('node:sqlite');
-  // Buat wrapper yang API-nya kompatibel dengan better-sqlite3
-  Database = class {
-    constructor(p) {
-      this._db = new DatabaseSync(p);
-      this._db.exec(`PRAGMA journal_mode = WAL;`);
-      this._db.exec(`PRAGMA foreign_keys = ON;`);
-    }
-    prepare(sql) { return this._db.prepare(sql); }
-    exec(sql) { return this._db.exec(sql); }
-    transaction(fn) { return this._db.transaction(fn); }
-  };
-}
+// better-sqlite3 tersedia di Linux cloud dengan prebuilt binary
+// Tidak perlu compile - langsung gunakan
+const Database = require('better-sqlite3');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, process.env.DATA_DIR || '../data');
@@ -36,8 +20,8 @@ const dbPath = path.join(DATA_DIR, 'internal-cloud.db');
 const db = new Database(dbPath);
 
 // WAL mode untuk performa lebih baik
-try { db.exec(`PRAGMA journal_mode = WAL;`); } catch (_) {}
-try { db.exec(`PRAGMA foreign_keys = ON;`); } catch (_) {}
+db.exec(`PRAGMA journal_mode = WAL;`);
+db.exec(`PRAGMA foreign_keys = ON;`);
 
 // ═══════════════════════════════════════════════════════════════
 // Migrasi tabel
@@ -86,7 +70,7 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_files_mime ON files(mime);
   `);
 
-  // Migrasi tambahan untuk DB lama
+  // Migrasi untuk DB lama
   try {
     const userCols = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
     if (!userCols.includes('google_refresh_token')) {
