@@ -345,7 +345,7 @@ if menu == "💬 Chat & File Stream":
                         
                         # Live preview for images & excel
                         if f["category"] == "image":
-                            st.image(data_b, caption=f["original_name"], use_column_width=False, width=320)
+                            st.image(data_b, caption=f["original_name"], width=320)
                         elif f["original_name"].endswith(".xlsx") or f["original_name"].endswith(".xls") or f["original_name"].endswith(".csv"):
                             try:
                                 if f["original_name"].endswith(".csv"):
