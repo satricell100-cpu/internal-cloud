@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: internal-cloud
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MAX_FILE_SIZE_MB
+        value: 50
+    disk:
+      name: internal-cloud-data
+      mountPath: /app/data
+      sizeGB: 1

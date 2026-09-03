@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internal Cloud - Chat-Based File Storage</title>
+  <meta name="description" content="Aplikasi cloud pribadi berbasis chat untuk menyimpan dan mengelola file PC & HP via WLAN Lokal dan Cloud Hosting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ═══ MAIN 3-COLUMN APP SHELL ═══ -->
+  <div id="app" class="app-dashboard">
+
+    <!-- ═══ 1. LEFT SIDEBAR (DARK GREEN) ═══ -->
+    <aside class="sidebar-left">
+      <!-- Brand Logo -->
+      <div class="brand-header">
+        <div class="brand-icon">
+          <i class="fa-solid fa-cloud"></i>
+        </div>
+        <span class="brand-name">Internal Cloud</span>
+      </div>
+
+      <!-- Storage Status Card -->
+      <div class="sidebar-status-card" id="sidebarStatusCard">
+        <div class="status-top">
+          <span class="status-dot"></span>
+          <span class="status-title">Online</span>
+        </div>
+        <p class="status-desc">Penyimpanan file chat</p>
+        <div class="storage-counter">
+          <i class="fa-solid fa-cloud"></i>
+          <span id="sidebarStorageText">0 MB dari 10 GB digunakan</span>
+        </div>
+        <div class="progress-bar-dark">
+          <div class="progress-fill-mint" id="sidebarProgressBar" style="width: 2%;"></div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="chat">
+          <i class="fa-solid fa-comment-dots"></i>
+          <span>Chat</span>
+        </button>
+        <button class="nav-item" data-view="all_files">
+          <i class="fa-solid fa-folder"></i>
+          <span>File Saya</span>
+        </button>
+        <button class="nav-item" data-view="documents">
+          <i class="fa-solid fa-file-lines"></i>
+          <span>Dokumen</span>
+        </button>
+        <button class="nav-item" data-view="archives">
+          <i class="fa-solid fa-box-archive"></i>
+          <span>Arsip</span>
+        </button>
+        <button class="nav-item" data-view="favorites">
+          <i class="fa-solid fa-star"></i>
+          <span>Favorit</span>
+        </button>
+        <button class="nav-item" data-view="shared">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Dibagikan ke Saya</span>
+        </button>
+        <button class="nav-item" data-view="trash">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Sampah</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Bottom -->
+      <div class="sidebar-bottom">
+        <button class="nav-item-sub" id="btnSettings">
+          <i class="fa-solid fa-gear"></i>
+          <span>Pengaturan</span>
+        </button>
+        <button class="nav-item-sub" id="btnHelp">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>Bantuan</span>
+        </button>
+
+        <!-- User Profile Card -->
+        <div class="sidebar-user-card" id="sidebarUserCard">
+          <div class="user-avatar-circle" id="sidebarAvatar">U</div>
+          <div class="user-info-text">
+            <h4 id="sidebarUserName">Pengguna</h4>
+            <p id="sidebarUserRole">Member Cloud</p>
+          </div>
+          <button class="user-dropdown-btn" id="btnUserDropdown">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ 2. MIDDLE CHAT / STREAM COLUMN ═══ -->
+    <section class="column-middle">
+      
+      <!-- Top Title Bar -->
+      <div class="middle-header">
+        <h1 id="viewTitle">Chat</h1>
+        <div class="network-badge" id="netBadgeTop" title="Mode Transfer">
+          <i class="fa-solid fa-wifi"></i>
+          <span id="netBadgeText">WLAN 192.168.1.21</span>
+        </div>
+      </div>
+
+      <!-- Messages Stream Area -->
+      <div class="chat-stream-container" id="chatStreamContainer">
+        
+        <!-- Drag and drop visual zone -->
+        <div class="drag-drop-overlay" id="dragDropOverlay">
+          <div class="drag-drop-modal">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h3>Lepaskan file di sini</h3>
+            <p>File akan diunggah ke cloud & langsung disinkronkan ke HP</p>
+          </div>
+        </div>
+
+        <div class="date-divider">
+          <span>Hari ini</span>
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="chat-bubbles-list" id="chatBubblesList">
+          <div class="empty-chat-state">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Belum ada percakapan. Kirim file atau ketik pesan di bawah.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Uploading Banner -->
+      <div class="upload-indicator-strip hidden" id="uploadIndicatorStrip">
+        <div class="upload-indicator-box">
+          <div class="upload-indicator-title">
+            <span id="uploadingName"><i class="fa-solid fa-file-arrow-up"></i> Mengunggah...</span>
+            <span id="uploadingPercentage">0%</span>
+          </div>
+          <div class="progress-bar-slim">
+            <div class="progress-fill-green" id="uploadingFill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected File Strip -->
+      <div class="selected-file-strip hidden" id="selectedFileStrip">
+        <div class="selected-file-card">
+          <div class="selected-file-icon" id="selectedFileIcon">
+            <i class="fa-solid fa-file"></i>
+          </div>
+          <div class="selected-file-info">
+            <strong id="selectedFileName">file.ext</strong>
+            <span id="selectedFileSize">0 KB</span>
+          </div>
+          <button class="selected-file-remove" id="btnRemoveSelectedFile">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Chat Input Bar -->
+      <div class="chat-input-bar">
+        <input type="file" id="fileUploadInput" class="hidden">
+        <button class="btn-input-attach" id="btnInputAttach" title="Lampirkan File / Dokumen / Gambar">
+          <i class="fa-solid fa-paperclip"></i>
+        </button>
+        <div class="input-field-wrapper">
+          <input type="text" id="chatTextInput" placeholder="Ketik pesan...">
+        </div>
+        <button class="btn-input-send" id="btnInputSend" title="Kirim">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ═══ 3. RIGHT OVERVIEW & STORAGE COLUMN ═══ -->
+    <aside class="column-right">
+      
+      <!-- Top Search & Notification Header -->
+      <div class="right-header">
+        <div class="search-box-pill">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="globalSearchInput" placeholder="Cari file atau pesan...">
+        </div>
+        <button class="header-icon-btn" id="btnQrModal" title="Hubungkan ke HP (QR Code)">
+          <i class="fa-solid fa-qrcode"></i>
+        </button>
+        <button class="header-icon-btn" id="btnNotifications" title="Notifikasi">
+          <i class="fa-regular fa-bell"></i>
+          <span class="notification-badge-dot"></span>
+        </button>
+        <div class="user-profile-avatar" id="headerProfileAvatar">
+          <i class="fa-solid fa-user"></i>
+        </div>
+      </div>
+
+      <!-- Right Scrollable Content -->
+      <div class="right-body">
+        
+        <!-- 1. File Tersimpan Section -->
+        <div class="section-card">
+          <div class="section-header">
+            <h3>File Tersimpan</h3>
+            <a href="javascript:void(0)" class="link-see-all" id="btnSeeAllFiles">Lihat semua</a>
+          </div>
+
+          <div class="category-cards-grid">
+            <div class="cat-card" data-cat="image">
+              <div class="cat-icon-box cat-img">
+                <i class="fa-solid fa-image"></i>
+              </div>
+              <span>Gambar</span>
+            </div>
+            <div class="cat-card" data-cat="document">
+              <div class="cat-icon-box cat-doc">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <span>Dokumen</span>
+            </div>
+            <div class="cat-card" data-cat="archive">
+              <div class="cat-icon-box cat-arc">
+                <i class="fa-solid fa-box-archive"></i>
+              </div>
+              <span>Arsip</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Terbaru (Recent Files) Section -->
+        <div class="section-card">
+          <div class="section-header">
+            <h3>Terbaru</h3>
+          </div>
+          <div class="recent-files-list" id="recentFilesList">
+            <!-- Dynamic Recent Files -->
+            <div class="empty-recent">Belum ada file tersimpan</div>
+          </div>
+        </div>
+
+        <!-- 3. Penyimpanan (Storage Donut Chart) Section -->
+        <div class="section-card storage-card">
+          <div class="section-header">
+            <h3>Penyimpanan</h3>
+          </div>
+
+          <!-- Donut Chart & Legend -->
+          <div class="storage-donut-wrapper">
+            <div class="donut-chart-container">
+              <div class="donut-chart" id="storageDonutChart">
+                <div class="donut-hole">
+                  <strong id="donutUsedText">0 GB</strong>
+                  <span>Digunakan</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="storage-legend">
+              <div class="legend-item">
+                <span class="legend-dot" style="background-color: #0d5c4d;"></span>
+                <span class="legend-label">Dokumen</span>
+                <span class="legend-val" id="legendDocVal">0 GB</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot" style="background-color: #10b981;"></span>
+                <span class="legend-label">Gambar</span>
+                <span class="legend-val" id="legendImgVal">0 GB</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot" style="background-color: #6ee7b7;"></span>
+                <span class="legend-label">Arsip</span>
+                <span class="legend-val" id="legendArcVal">0 GB</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot" style="background-color: #93c5fd;"></span>
+                <span class="legend-label">Lainnya</span>
+                <span class="legend-val" id="legendOtherVal">0 GB</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Summary Line -->
+          <div class="storage-bottom-summary">
+            <span id="storageBottomText">0 GB dari 10 GB digunakan</span>
+            <span id="storageBottomPercent">0%</span>
+          </div>
+          <div class="progress-bar-flat">
+            <div class="progress-fill-flat" id="storageBottomProgress" style="width: 2%;"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ═══ MODAL: QR CODE MOBILE CONNECTION ═══ -->
+  <div class="modal-backdrop hidden" id="qrModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-mobile-screen-button"></i> Hubungkan ke HP (WLAN & Cloud)</h3>
+        <button class="modal-close" data-close="qrModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="modal-desc">Buka kamera atau browser di HP untuk menghubungkan aplikasi ke server ini:</p>
+        <div class="qr-box">
+          <img id="qrImage" src="" alt="QR Code URL">
+        </div>
+        <div class="url-copy-box">
+          <label>Alamat Akses HP (WLAN):</label>
+          <div class="url-input-row">
+            <input type="text" id="lanUrlInput" readonly value="http://192.168.1.21:3000">
+            <button class="btn btn-primary" id="btnCopyLanUrl"><i class="fa-solid fa-copy"></i> Salin</button>
+          </div>
+        </div>
+        <p class="modal-hint">💡 Saat HP & Laptop berada di WiFi yang sama, file dikirim secara instan tanpa memakan kuota internet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MODAL: AUTH (LOGIN & REGISTER) ═══ -->
+  <div class="modal-backdrop hidden" id="authModal">
+    <div class="modal-card auth-card">
+      <div class="auth-header">
+        <div class="auth-icon-circle"><i class="fa-solid fa-cloud"></i></div>
+        <h2>Internal Cloud</h2>
+        <p>Masuk untuk mengelola file & sinkronisasi ke HP</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">Masuk</button>
+        <button class="auth-tab" id="tabRegister">Daftar Akun</button>
+      </div>
+      <form id="formLogin" class="auth-form">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="loginUsername" required placeholder="Masukkan username" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="Masukkan password" autocomplete="current-password">
+        </div>
+        <div class="auth-error hidden" id="loginError"></div>
+        <button type="submit" class="btn btn-primary btn-block">Masuk ke Akun</button>
+      </form>
+      <form id="formRegister" class="auth-form hidden">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="regDisplayName" required placeholder="Nama tampilan Anda">
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="regUsername" required placeholder="Minimal 3 karakter">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" required placeholder="Minimal 4 karakter">
+        </div>
+        <div class="auth-error hidden" id="regError"></div>
+        <button type="submit" class="btn btn-primary btn-block">Daftar Akun Baru</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ MODAL: IMAGE LIGHTBOX ═══ -->
+  <div class="lightbox-backdrop hidden" id="lightboxModal">
+    <div class="lightbox-header">
+      <span id="lightboxTitle">Gambar</span>
+      <div class="lightbox-btns">
+        <a id="lightboxDownloadBtn" href="#" download class="btn-lightbox"><i class="fa-solid fa-download"></i> Unduh</a>
+        <button id="lightboxCloseBtn" class="btn-lightbox"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="lightbox-view">
+      <img id="lightboxImg" src="" alt="Preview">
+    </div>
+  </div>
+
+  <!-- ═══ MODAL: DOCUMENT PREVIEW ═══ -->
+  <div class="modal-backdrop hidden" id="docModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-file-lines"></i> Detail Dokumen</h3>
+        <button class="modal-close" data-close="docModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="doc-icon-large" id="docBadgeLarge">
+          <i class="fa-solid fa-file-pdf" id="docBadgeIcon"></i>
+          <span id="docBadgeTag">PDF</span>
+        </div>
+        <h3 id="docModalName" class="doc-title-text">Dokumen.pdf</h3>
+        <p id="docModalMeta" class="doc-meta-text">3.6 MB • PDF</p>
+        <div class="doc-btns">
+          <a id="btnDocDownload" href="#" download class="btn btn-primary"><i class="fa-solid fa-download"></i> Unduh File</a>
+          <a id="btnDocRawOpen" href="#" target="_blank" class="btn btn-secondary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka di Tab Baru</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
