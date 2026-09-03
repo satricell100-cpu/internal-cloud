@@ -1,17 +1,21 @@
-FROM node:22-alpine
+FROM node:20-alpine
+
+# Build tools for better-sqlite3 native compilation on Linux
+RUN apk add --no-cache python3 make g++ sqlite-dev
 
 WORKDIR /app
 
-# Salin dependencies server
+# Install server dependencies (termasuk better-sqlite3 dengan prebuilt Linux binary)
 COPY server/package*.json ./server/
-RUN cd server && npm install --omit=dev
+RUN cd server && npm install --build-from-source
 
-# Salin source code dan public web assets
+# Copy source code and web assets
 COPY server ./server
-COPY index.js package.json ./
+COPY index.js package*.json ./
+RUN npm install --ignore-scripts
 
-# Setup direktori data SQLite & uploads
-RUN mkdir -p /app/server/data /app/server/data/uploads
+# Create data directories
+RUN mkdir -p /app/server/data/uploads /app/server/data/quarantine
 VOLUME ["/app/server/data"]
 
 ENV NODE_ENV=production

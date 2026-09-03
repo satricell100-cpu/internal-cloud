@@ -1,10 +1,31 @@
-import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
+let Database;
+try {
+  // Coba better-sqlite3 dulu (tersedia di cloud Linux dengan prebuilt binary)
+  Database = require('better-sqlite3');
+} catch {
+  // Fallback: gunakan node:sqlite (Node 22+)
+  const { DatabaseSync } = await import('node:sqlite');
+  // Buat wrapper yang API-nya kompatibel dengan better-sqlite3
+  Database = class {
+    constructor(p) {
+      this._db = new DatabaseSync(p);
+      this._db.exec(`PRAGMA journal_mode = WAL;`);
+      this._db.exec(`PRAGMA foreign_keys = ON;`);
+    }
+    prepare(sql) { return this._db.prepare(sql); }
+    exec(sql) { return this._db.exec(sql); }
+    transaction(fn) { return this._db.transaction(fn); }
+  };
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// DATA_DIR relatif ke server/ (bukan src/) - ../data dari src/db.js = server/data
 const DATA_DIR = path.resolve(__dirname, process.env.DATA_DIR || '../data');
 
 // Pastikan folder data ada
@@ -12,11 +33,11 @@ fs.mkdirSync(path.join(DATA_DIR, 'uploads'), { recursive: true });
 fs.mkdirSync(path.join(DATA_DIR, 'quarantine'), { recursive: true });
 
 const dbPath = path.join(DATA_DIR, 'internal-cloud.db');
-const db = new DatabaseSync(dbPath);
+const db = new Database(dbPath);
 
 // WAL mode untuk performa lebih baik
-db.exec(`PRAGMA journal_mode = WAL;`);
-db.exec(`PRAGMA foreign_keys = ON;`);
+try { db.exec(`PRAGMA journal_mode = WAL;`); } catch (_) {}
+try { db.exec(`PRAGMA foreign_keys = ON;`); } catch (_) {}
 
 // ═══════════════════════════════════════════════════════════════
 // Migrasi tabel
@@ -31,14 +52,14 @@ export function initDB() {
       display_name TEXT,
       google_refresh_token TEXT,
       google_drive_email TEXT,
-      created_at  INTEGER NOT NULL DEFAULT (unixepoch('now', 'subsec') * 1000)
+      created_at  INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     );
 
     CREATE TABLE IF NOT EXISTS messages (
       id          TEXT PRIMARY KEY,
       user_id     TEXT NOT NULL REFERENCES users(id),
       body        TEXT,
-      ts          INTEGER NOT NULL DEFAULT (unixepoch('now', 'subsec') * 1000),
+      ts          INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
       chat_date   TEXT NOT NULL
     );
 
@@ -53,7 +74,7 @@ export function initDB() {
       size_bytes      INTEGER NOT NULL DEFAULT 0,
       quarantined     INTEGER NOT NULL DEFAULT 0,
       drive_file_id   TEXT,
-      ts              INTEGER NOT NULL DEFAULT (unixepoch('now', 'subsec') * 1000)
+      ts              INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_ts ON messages(ts DESC);
@@ -65,7 +86,7 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_files_mime ON files(mime);
   `);
 
-  // Migrasi tambahan: tambah kolom google drive jika belum ada (untuk DB lama)
+  // Migrasi tambahan untuk DB lama
   try {
     const userCols = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
     if (!userCols.includes('google_refresh_token')) {
@@ -74,17 +95,15 @@ export function initDB() {
     if (!userCols.includes('google_drive_email')) {
       db.exec(`ALTER TABLE users ADD COLUMN google_drive_email TEXT`);
     }
-
-    // files: tambah kolom drive_file_id jika belum ada
     const fileCols = db.prepare(`PRAGMA table_info(files)`).all().map(c => c.name);
     if (!fileCols.includes('drive_file_id')) {
       db.exec(`ALTER TABLE files ADD COLUMN drive_file_id TEXT`);
     }
   } catch (e) {
-    console.log('[DB] users migration:', e.message);
+    console.log('[DB] Migration:', e.message);
   }
 
-  // Buat tabel FTS5 untuk full-text search
+  // FTS5 search index
   try {
     db.exec(`
       CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5(
@@ -94,7 +113,7 @@ export function initDB() {
       );
     `);
   } catch (e) {
-    console.log('[DB] FTS5 table check:', e.message);
+    console.log('[DB] FTS5:', e.message);
   }
 
   console.log('[DB] Database initialized at', dbPath);
