@@ -4,6 +4,9 @@
   "description": "Internal Cloud - Chat-based file storage",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node server/src/index.js",
     "server": "cd server && npm start"
