@@ -10,7 +10,9 @@ import 'app_config.dart';
 // Layanan komunikasi dengan backend Internal Cloud
 // Semua endpoint di sini sesuai dengan API di server (src/routes/)
 class ApiService {
-  static const String baseUrl = AppConfig.baseUrl;
+  // baseUrl bersifat dinamis — ditentukan oleh AppConfig.detect() saat app start
+  // Otomatis pakai WLAN lokal jika WiFi sama, atau Railway cloud jika beda jaringan
+  static String get baseUrl => AppConfig.baseUrl;
 
   // ── Token management ──────────────────────────────────────────
   static String? cachedToken;

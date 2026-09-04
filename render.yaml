@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: internal-cloud
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: MAX_FILE_SIZE_MB
+        value: 50
+      - key: ALLOWED_EXTENSIONS
+        value: pdf,docx,doc,xlsx,xls,pptx,txt,csv,png,jpg,jpeg,gif,webp,zip,rar,7z
+      - key: STORAGE_DRIVER
+        value: local
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+    disk:
+      name: internal-cloud-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    healthCheckPath: /api/health

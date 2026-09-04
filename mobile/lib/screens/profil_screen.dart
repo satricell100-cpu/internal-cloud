@@ -328,7 +328,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
               subtitle: const Text('Salin URL ke clipboard'),
               onTap: () {
                 Navigator.pop(ctx);
-                Clipboard.setData(const ClipboardData(text: AppConfig.baseUrl));
+                Clipboard.setData(ClipboardData(text: AppConfig.baseUrl));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Alamat server disalin ke clipboard!')),
                 );

@@ -3,10 +3,20 @@ import 'package:provider/provider.dart';
 
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/app_config.dart';
 import 'services/app_state.dart';
 import 'services/auth_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ── Auto-detect jaringan ───────────────────────────────────────
+  // Coba WLAN lokal dulu. Jika tidak tersedia → pakai Cloud Railway.
+  await AppConfig.detect();
+  debugPrint('[Network] Mode: ${AppConfig.connectionMode}');
+  debugPrint('[Network] Server: ${AppConfig.baseUrl}');
+  // ─────────────────────────────────────────────────────────────
+
   runApp(
     MultiProvider(
       providers: [
