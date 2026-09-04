@@ -22,5 +22,9 @@ services:
       - key: STORAGE_DRIVER
         value: local
       - key: DATA_DIR
-        value: /tmp/internal-cloud-data
+        value: /app/data
     healthCheckPath: /api/health
+    disks:
+      - name: data
+        mountPath: /app/data
+        sizeGB: 1
