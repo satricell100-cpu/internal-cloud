@@ -1,0 +1,44 @@
+{
+  "version": "v1",
+  "services": [
+    {
+      "name": "internal-cloud",
+      "type": "web",
+      "git": {
+        "repository": "https://github.com/satricell100-cpu/internal-cloud",
+        "branch": "main",
+        "workdir": "server"
+      },
+      "build": {
+        "buildpack": "nodejs",
+        "build_command": "npm install"
+      },
+      "run": {
+        "run_command": "node src/index.js"
+      },
+      "ports": [
+        {
+          "port": 10000,
+          "protocol": "http"
+        }
+      ],
+      "env": [
+        { "key": "NODE_ENV", "value": "production" },
+        { "key": "PORT", "value": "10000" },
+        { "key": "HOST", "value": "0.0.0.0" },
+        { "key": "JWT_EXPIRES_IN", "value": "7d" },
+        { "key": "MAX_FILE_SIZE_MB", "value": "50" },
+        { "key": "ALLOWED_EXTENSIONS", "value": "pdf,docx,doc,xlsx,xls,pptx,txt,csv,png,jpg,jpeg,gif,webp,zip,rar,7z" },
+        { "key": "STORAGE_DRIVER", "value": "local" },
+        { "key": "DATA_DIR", "value": "/tmp/internal-cloud-data" }
+      ],
+      "checks": [
+        {
+          "type": "http",
+          "port": 10000,
+          "path": "/api/health"
+        }
+      ]
+    }
+  ]
+}
