@@ -24,9 +24,5 @@ services:
       - key: STORAGE_DRIVER
         value: local
       - key: DATA_DIR
-        value: /opt/render/project/src/data
-    disk:
-      name: internal-cloud-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
+        value: /tmp/internal-cloud-data
     healthCheckPath: /api/health
