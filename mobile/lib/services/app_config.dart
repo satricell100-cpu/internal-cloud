@@ -18,7 +18,7 @@ class AppConfig {
 
   /// URL server cloud Railway (selalu aktif, bisa diakses dari mana saja)
   static const String cloudUrl =
-      'https://web-production-1e386.up.railway.app';
+      'https://internal-cloud-production.up.railway.app';
 
   /// Timeout untuk cek koneksi lokal (singkat agar tidak lambat)
   static const Duration _detectTimeout = Duration(milliseconds: 1500);
