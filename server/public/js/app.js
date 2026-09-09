@@ -22,6 +22,10 @@
   // ── DOM Elements ───────────────────────────────────────────
   const el = {
     app: document.getElementById('app'),
+    sidebarLeft: document.getElementById('sidebarLeft'),
+    btnSidebarClose: document.getElementById('btnSidebarClose'),
+    sidebarBackdrop: document.getElementById('sidebarBackdrop'),
+
     authModal: document.getElementById('authModal'),
     tabLogin: document.getElementById('tabLogin'),
     tabRegister: document.getElementById('tabRegister'),
@@ -33,12 +37,23 @@
     sidebarAvatar: document.getElementById('sidebarAvatar'),
     sidebarUserName: document.getElementById('sidebarUserName'),
     sidebarUserRole: document.getElementById('sidebarUserRole'),
+    sidebarUserCard: document.getElementById('sidebarUserCard'),
+    btnUserDropdown: document.getElementById('btnUserDropdown'),
     sidebarStorageText: document.getElementById('sidebarStorageText'),
     sidebarProgressBar: document.getElementById('sidebarProgressBar'),
     
     viewTitle: document.getElementById('viewTitle'),
     netBadgeTop: document.getElementById('netBadgeTop'),
     netBadgeText: document.getElementById('netBadgeText'),
+
+    btnMobileMenu: document.getElementById('btnMobileMenu'),
+    btnMobileSearchToggle: document.getElementById('btnMobileSearchToggle'),
+    btnMobileQr: document.getElementById('btnMobileQr'),
+    btnMobileOverview: document.getElementById('btnMobileOverview'),
+
+    mobileSearchBar: document.getElementById('mobileSearchBar'),
+    mobileSearchInput: document.getElementById('mobileSearchInput'),
+    btnMobileSearchClose: document.getElementById('btnMobileSearchClose'),
     
     chatStreamContainer: document.getElementById('chatStreamContainer'),
     chatBubblesList: document.getElementById('chatBubblesList'),
@@ -60,6 +75,10 @@
     selectedFileIcon: document.getElementById('selectedFileIcon'),
     btnRemoveSelectedFile: document.getElementById('btnRemoveSelectedFile'),
     
+    columnRight: document.getElementById('columnRight'),
+    btnRightClose: document.getElementById('btnRightClose'),
+    rightBackdrop: document.getElementById('rightBackdrop'),
+
     globalSearchInput: document.getElementById('globalSearchInput'),
     btnQrModal: document.getElementById('btnQrModal'),
     btnSeeAllFiles: document.getElementById('btnSeeAllFiles'),
@@ -142,6 +161,69 @@
       showToast('Alamat URL server disalin ke clipboard!', 'success');
     });
 
+    // Mobile Drawer: Left Sidebar
+    const openSidebar = () => {
+      el.sidebarLeft?.classList.add('open');
+      el.sidebarBackdrop?.classList.remove('hidden');
+    };
+    const closeSidebar = () => {
+      el.sidebarLeft?.classList.remove('open');
+      el.sidebarBackdrop?.classList.add('hidden');
+    };
+    el.btnMobileMenu?.addEventListener('click', openSidebar);
+    el.btnSidebarClose?.addEventListener('click', closeSidebar);
+    el.sidebarBackdrop?.addEventListener('click', closeSidebar);
+
+    // Mobile Drawer: Right Column (Overview & Storage)
+    const openRightDrawer = () => {
+      el.columnRight?.classList.add('open');
+      el.rightBackdrop?.classList.remove('hidden');
+    };
+    const closeRightDrawer = () => {
+      el.columnRight?.classList.remove('open');
+      el.rightBackdrop?.classList.add('hidden');
+    };
+    el.btnMobileOverview?.addEventListener('click', openRightDrawer);
+    el.btnRightClose?.addEventListener('click', closeRightDrawer);
+    el.rightBackdrop?.addEventListener('click', closeRightDrawer);
+
+    // Mobile QR Modal
+    el.btnMobileQr?.addEventListener('click', showQrModal);
+
+    // Mobile Search Bar
+    el.btnMobileSearchToggle?.addEventListener('click', () => {
+      const isHidden = el.mobileSearchBar?.classList.contains('hidden');
+      if (isHidden) {
+        el.mobileSearchBar?.classList.remove('hidden');
+        el.mobileSearchInput?.focus();
+      } else {
+        el.mobileSearchBar?.classList.add('hidden');
+      }
+    });
+
+    el.btnMobileSearchClose?.addEventListener('click', () => {
+      el.mobileSearchBar?.classList.add('hidden');
+      if (el.mobileSearchInput) el.mobileSearchInput.value = '';
+      if (el.globalSearchInput) el.globalSearchInput.value = '';
+      renderMessages();
+    });
+
+    if (el.mobileSearchInput) {
+      el.mobileSearchInput.addEventListener('input', (e) => {
+        if (el.globalSearchInput) el.globalSearchInput.value = e.target.value;
+        handleSearch();
+      });
+    }
+
+    // User Logout
+    el.btnUserDropdown?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleLogout();
+    });
+    el.sidebarUserCard?.addEventListener('click', () => {
+      handleLogout();
+    });
+
     // Sidebar Navigation Menus
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -150,6 +232,7 @@
         state.currentView = btn.dataset.view;
         updateViewTitle();
         renderMessages();
+        closeSidebar();
       });
     });
 
@@ -166,6 +249,7 @@
         });
         updateViewTitle();
         renderMessages();
+        closeRightDrawer();
       });
     });
 
@@ -176,6 +260,7 @@
       });
       updateViewTitle();
       renderMessages();
+      closeRightDrawer();
     });
 
     // Attach File
@@ -193,7 +278,10 @@
     });
 
     // Global Search
-    el.globalSearchInput.addEventListener('input', handleSearch);
+    el.globalSearchInput.addEventListener('input', () => {
+      if (el.mobileSearchInput) el.mobileSearchInput.value = el.globalSearchInput.value;
+      handleSearch();
+    });
 
     // Drag & Drop
     setupDragAndDrop();
@@ -251,10 +339,11 @@
       const data = await res.json();
       state.networkInfo = data;
 
-      const isWlan = data.mode === 'hybrid_wlan';
+      const isCloudHost = data.mode === 'cloud' || window.location.protocol === 'https:' || (window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('192.168.') && !window.location.hostname.startsWith('10.'));
+      const isWlan = !isCloudHost && data.mode === 'hybrid_wlan';
       el.netBadgeText.textContent = isWlan ? `WLAN ${data.primaryLocalIp}` : 'CLOUD HOSTED';
       
-      const serverUrl = data.localUrl || window.location.origin;
+      const serverUrl = isCloudHost ? (data.cloudUrl || window.location.origin) : (data.localUrl || window.location.origin);
       el.lanUrlInput.value = serverUrl;
 
       // QR Code
@@ -701,7 +790,7 @@
 
   // ── Search ─────────────────────────────────────────────────
   function handleSearch() {
-    const val = el.globalSearchInput.value.trim().toLowerCase();
+    const val = (el.globalSearchInput.value || el.mobileSearchInput?.value || '').trim().toLowerCase();
     clearTimeout(state.searchDebounce);
     state.searchDebounce = setTimeout(() => {
       if (!val) {
@@ -749,6 +838,26 @@
     }, 250);
   }
 
+  // ── Logout ─────────────────────────────────────────────────
+  function handleLogout() {
+    if (confirm('Keluar dari akun Internal Cloud?')) {
+      localStorage.removeItem('internal_cloud_token');
+      localStorage.removeItem('internal_cloud_user');
+      state.token = null;
+      state.user = null;
+      if (state.ws) {
+        try { state.ws.close(); } catch (_) {}
+        state.ws = null;
+      }
+      el.sidebarLeft?.classList.remove('open');
+      el.sidebarBackdrop?.classList.add('hidden');
+      el.columnRight?.classList.remove('open');
+      el.rightBackdrop?.classList.add('hidden');
+      showAuthModal();
+      showToast('Anda telah keluar dari akun.', 'info');
+    }
+  }
+
   // ── Modals & Lightbox ──────────────────────────────────────
   function openImageLightbox(fileId, fileName) {
     const rawUrl = getAuthenticatedFileUrl(fileId, 'raw');
@@ -773,6 +882,8 @@
   }
 
   function handleFileClick(fileId, fileName, category) {
+    el.columnRight?.classList.remove('open');
+    el.rightBackdrop?.classList.add('hidden');
     if (category === 'image') {
       openImageLightbox(fileId, fileName);
     } else {

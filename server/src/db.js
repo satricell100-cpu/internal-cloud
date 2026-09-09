@@ -5,9 +5,13 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 
-// better-sqlite3 tersedia di Linux cloud dengan prebuilt binary
-// Tidak perlu compile - langsung gunakan
-const Database = require('better-sqlite3');
+let Database;
+try {
+  Database = require('better-sqlite3');
+} catch (_) {
+  const { DatabaseSync } = await import('node:sqlite');
+  Database = DatabaseSync;
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, process.env.DATA_DIR || '../data');

@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#064e43">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Internal Cloud - Chat-Based File Storage</title>
   <meta name="description" content="Aplikasi cloud pribadi berbasis chat untuk menyimpan dan mengelola file PC & HP via WLAN Lokal dan Cloud Hosting.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,13 +20,16 @@
   <div id="app" class="app-dashboard">
 
     <!-- ═══ 1. LEFT SIDEBAR (DARK GREEN) ═══ -->
-    <aside class="sidebar-left">
+    <aside class="sidebar-left" id="sidebarLeft">
       <!-- Brand Logo -->
       <div class="brand-header">
         <div class="brand-icon">
           <i class="fa-solid fa-cloud"></i>
         </div>
         <span class="brand-name">Internal Cloud</span>
+        <button class="sidebar-close-btn" id="btnSidebarClose" aria-label="Tutup Menu">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <!-- Storage Status Card -->
@@ -86,28 +92,61 @@
         </button>
 
         <!-- User Profile Card -->
-        <div class="sidebar-user-card" id="sidebarUserCard">
+        <div class="sidebar-user-card" id="sidebarUserCard" title="Klik untuk keluar / ganti akun">
           <div class="user-avatar-circle" id="sidebarAvatar">U</div>
           <div class="user-info-text">
             <h4 id="sidebarUserName">Pengguna</h4>
             <p id="sidebarUserRole">Member Cloud</p>
           </div>
-          <button class="user-dropdown-btn" id="btnUserDropdown">
-            <i class="fa-solid fa-chevron-down"></i>
+          <button class="user-dropdown-btn" id="btnUserDropdown" title="Keluar dari akun">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
           </button>
         </div>
       </div>
     </aside>
+
+    <!-- Mobile Drawer Backdrop for Left Sidebar -->
+    <div class="drawer-backdrop hidden" id="sidebarBackdrop"></div>
 
     <!-- ═══ 2. MIDDLE CHAT / STREAM COLUMN ═══ -->
     <section class="column-middle">
       
       <!-- Top Title Bar -->
       <div class="middle-header">
-        <h1 id="viewTitle">Chat</h1>
-        <div class="network-badge" id="netBadgeTop" title="Mode Transfer">
-          <i class="fa-solid fa-wifi"></i>
-          <span id="netBadgeText">WLAN 192.168.1.21</span>
+        <div class="header-left-group">
+          <button class="header-menu-btn" id="btnMobileMenu" aria-label="Buka Menu" title="Menu Navigasi">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="header-title-wrap">
+            <h1 id="viewTitle">Chat</h1>
+            <div class="network-badge" id="netBadgeTop" title="Mode Transfer">
+              <i class="fa-solid fa-wifi"></i>
+              <span id="netBadgeText">WLAN 192.168.1.21</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions-group">
+          <button class="header-action-btn" id="btnMobileSearchToggle" title="Cari Pesan & File">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+          <button class="header-action-btn" id="btnMobileQr" title="Hubungkan ke HP (QR Code)">
+            <i class="fa-solid fa-qrcode"></i>
+          </button>
+          <button class="header-action-btn" id="btnMobileOverview" title="Penyimpanan & File">
+            <i class="fa-solid fa-chart-pie"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Collapsible Search Bar -->
+      <div class="mobile-search-bar hidden" id="mobileSearchBar">
+        <div class="mobile-search-inner">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="mobileSearchInput" placeholder="Cari file atau pesan...">
+          <button class="mobile-search-close" id="btnMobileSearchClose" title="Tutup Pencarian">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
       </div>
 
@@ -183,7 +222,7 @@
     </section>
 
     <!-- ═══ 3. RIGHT OVERVIEW & STORAGE COLUMN ═══ -->
-    <aside class="column-right">
+    <aside class="column-right" id="columnRight">
       
       <!-- Top Search & Notification Header -->
       <div class="right-header">
@@ -198,9 +237,9 @@
           <i class="fa-regular fa-bell"></i>
           <span class="notification-badge-dot"></span>
         </button>
-        <div class="user-profile-avatar" id="headerProfileAvatar">
-          <i class="fa-solid fa-user"></i>
-        </div>
+        <button class="header-icon-btn right-close-btn" id="btnRightClose" title="Tutup Panel">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <!-- Right Scrollable Content -->
@@ -300,6 +339,9 @@
       </div>
 
     </aside>
+
+    <!-- Mobile Drawer Backdrop for Right Column -->
+    <div class="drawer-backdrop hidden" id="rightBackdrop"></div>
 
   </div>
 

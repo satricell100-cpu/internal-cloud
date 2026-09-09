@@ -63,7 +63,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/network/info', (req, res) => {
   const ips = getLocalIpAddresses();
   const primaryIp = ips.find(i => i.address.startsWith('192.168.') || i.address.startsWith('10.'))?.address || ips[0]?.address || '127.0.0.1';
-  const isCloud = process.env.NODE_ENV === 'production' || !!process.env.RENDER || !!process.env.RAILWAY_ENVIRONMENT;
+  const isCloud = process.env.NODE_ENV === 'production' || !!process.env.RENDER || !!process.env.RAILWAY_ENVIRONMENT || !!process.env.RAILWAY_PUBLIC_DOMAIN;
+  const cloudUrl = process.env.PUBLIC_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : (process.env.RAILWAY_STATIC_URL ? `https://${process.env.RAILWAY_STATIC_URL}` : null));
 
   res.json({
     mode: isCloud ? 'cloud' : 'hybrid_wlan',
@@ -71,7 +72,7 @@ app.get('/api/network/info', (req, res) => {
     localIps: ips,
     primaryLocalIp: primaryIp,
     localUrl: `http://${primaryIp}:${PORT}`,
-    cloudUrl: process.env.PUBLIC_URL || null,
+    cloudUrl: cloudUrl,
     storageDriver: process.env.STORAGE_DRIVER || 'local',
   });
 });
